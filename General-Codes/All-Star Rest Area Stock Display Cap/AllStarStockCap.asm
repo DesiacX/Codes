@@ -1,6 +1,7 @@
 ################################
 All-Star Rest Area Stock Display Cap[Desi]
 ################################
+op stwu r1, -0x210, r1 @ $80952E8C
 op addi r1, r1, 0x210 @ $80952F88
 op stw r0, 0x170 r1 @ $80952E94
 op lwz r0, 0x170 r1 @ $80952F80
