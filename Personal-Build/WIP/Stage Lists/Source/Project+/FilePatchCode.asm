@@ -37,8 +37,19 @@ CODE @ $805A7E00
 	addi r4, r1, 0x20
 	stwu r1, -0x180(r1)
 	stw r4, 0x8(r1)
+
+  lis r4, 0x8049    #Modification for Stagelist Related files to load File Path from Stagelist.asm
+  ori r4, r4, 0x5D3C
+  lwz r3, 0 (r4)
+  cmpwi r3, 0x1
+  blt- OriginalModFolder
+  nop #A hookpoint below
+  b ModFolderSkip
+OriginalModFolder:
 	lis r4, 0x8040		#\ Mod folder
 	ori r4, r4, 0x6920	#/
+
+ModFolderSkip:
 	addi r3, r1, 0x10
 	lis r12, 0x803F 
 	ori r12, r12, 0xA340
@@ -85,6 +96,16 @@ finish:
 	bctr
 }
 
+
+
+HOOK @ $805A7E24
+{
+  li r3, 0  #Hookpoint after checking for Stagelist Modification
+  stw r3, 0 (r4)
+  lwz r4, -0x8 (r4)
+}
+
+
 # Related to setting parameters for file loading
 * 040223E0 48585BC0
 * 065A7FA0 00000028
@@ -119,8 +140,8 @@ op NOP @ $803D8C80
 * 065A7C0A 00000002	#
 * 70660000 00000000 # Adds "pf" ?!?
 
-* 80000001 805A7B00 # Also copies the mod name header to 805A7B00
-* 8A000A01 00000000	#
+#* 80000001 805A7B00 # Also copies the mod name header to 805A7B00
+#* 8A000A01 00000000 # Stagefiles.asm will copy this when it loads the tracklist file.
 
 # string "pf/sound/" @ $805A7B0A # Warning, commented out because the null terminator for the string breaks the filenames!
 * 065A7B0A 00000009				 #

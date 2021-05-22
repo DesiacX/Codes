@@ -491,6 +491,12 @@ CODE @ $8053E000
 	mtctr r12				# |
 	bctrl 					# /
 	addi r3, r1, 0x60
+
+	lis r18, 0x8049			#\Decalre to File Patch to use SD Root contained within Stagelist.asm
+	ori r18, r18, 0x5D3C	#|
+	li r19, 0x1				#|
+	stw r19, 0 (r18)		#/
+
 	li r18, 0
 	li r19, 0
 	lis r12, 0x8001			# \
@@ -577,6 +583,12 @@ not_found:
 	mtctr r12				# |
 	bctrl 					# /
 	addi r3, r1, 0x60
+
+	lis r18, 0x8049			#\Decalre to File Patch to use SD Root contained within Stagelist.asm
+	ori r18, r18, 0x5D3C	#|
+	li r19, 0x1				#|
+	stw r19, 0 (r18)		#/
+
 	li r18, 0
 	li r19, 0
 	lis r12, 0x8001			# \
@@ -617,6 +629,25 @@ TracklistLoading:
 	ori r12, r12, 0x239C	# | set the read parameter
 	mtctr r12				# |
 	bctrl 					# /
+
+	lis r6, 0x8049			#Setup CSE Path
+	ori r6, r6, 0x5D34
+	lwz r6, 0 (r6)
+	lis r12, 0x805A
+	ori r12, r12, 0x7B00
+	lwz r3, 0 (r6)
+	stw r3, 0 (r12)
+	lwz r3, 4 (r6)
+	stw r3, 4 (r12)
+	lhz r3, 8 (r6)
+	sth r3, 8 (r12)
+
+
+	lis r6, 0x8049			#\Decalre to File Patch to use SD Root contained within Stagelist.asm
+	ori r6, r6, 0x5D3C		#|
+	li r12, 0x1				#|
+	stw r12, 0 (r6)			#/
+	
 	addi r3, r1, 0x30
 	li r6,0					# Necessary to prevent a max filesize override by the File Patch Code!
 	lis r12, 0x8001			# \

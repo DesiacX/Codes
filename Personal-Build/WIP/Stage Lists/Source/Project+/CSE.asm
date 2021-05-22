@@ -432,8 +432,13 @@ doNotForce:
   ori r4, r4, 0xEFF4		# %s%s%s%s
   lis r5, 0x8059							# \ "sd:"
   ori r5, r5, 0xC568						# /
-  lis r6, 0x8040							# \ pointer to mod folder name
-  ori r6, r6, 0x6920						# /
+
+  #lis r6, 0x8040							# \ pointer to mod folder name
+  #ori r6, r6, 0x6920						# /
+  lis r6, 0x8049							# \ pointer to mod folder name
+  lwz r6, 0x5D34 (r6)						# | This is changed to read from the loaded Stagelist file.
+  lwz r6, 0 (r6)							# /
+  
   lis r7, 0x8053							# \ "pf/sound/"
   ori r7, r7, 0xEFB4						# /
   lwz r7, 0(r7)
