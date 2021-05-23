@@ -5,6 +5,13 @@ Stagelist Looter [Desi]
     .alias CodeMenuStart = 0x804E 
     .alias CodeMenuHeader = 0x02DC      #Offset of word containing location of the speed modifier. Source is compiled with headers for this.
 
+#Memory Usage
+#935CE460 - Stagelist GCT and Selmap.pac File Map Location
+#80495D34 - Location of SD Root inside file loaded GCT 
+#80495D38 - GCT Link Return Location
+#80495D3C - File Patch Flag (Set by StageFiles.ASM, turned off by FilePatchCode.asm)
+#80495D40 - Location of Loaded GCT
+
 
     .BA<-StagelistCodesetStorage
     .BA->$935CE460
@@ -147,10 +154,6 @@ HOOK @ $806D6724
 	stw r6, 4 (r3)
 	lhz r6, 8 (r4)
 	sth r6, 8 (r3)
-
-
-
-
     lis r3, 0x805A  #Original Operation
 
 }
@@ -175,8 +178,10 @@ lbz r30, 0xB (r30)        #OBtain Codemenu Offset
 mulli r30, r30, 0x4
 lwzx r30, r3, r30       #Obtain Stagelist File based on
 stw r30, 0 (r31)
-lis r30, 0x8049			#|
-ori r30, r30 0x5600		#|
+
+lis r30, 0x8049			#|Load storage allocation within GCT
+ori r30, r30, 0x5D40     #|
+lwz r30, 0 (r30)		#|
 stw r30, 12(r31)		#/
 
 li r30, 0x0				#\Initialize Data
@@ -217,8 +222,10 @@ ori r31, r31, 0xE460
 lwz r30, 0 (r31)
 lwz r30, 0 (r30)        #|Obtain Default STagelist name.
 stw r30, 0 (r31)
-lis r30, 0x8049			#|
-ori r30, r30 0x5600		#|
+
+lis r30, 0x8049			#|Load storage allocation within GCT
+ori r30, r30, 0x5D40     #|
+lwz r30, 0 (r30)		#|
 stw r30, 12(r31)		#/
 
 li r30, 0x0				#\Initialize Data
@@ -259,8 +266,9 @@ ori r31, r31, 0xE460
 lwz r30, 0 (r31)
 lwz r30, 0 (r30)        #|Obtain Default STagelist name.
 stw r30, 0 (r31)
-lis r30, 0x8049			#|
-ori r30, r30 0x5600		#|
+lis r30, 0x8049			#|Load storage allocation within GCT
+ori r30, r30, 0x5D40    #|
+lwz r30, 0 (r30)		#|
 stw r30, 12(r31)		#/
 
 li r30, 0x0				#\Initialize Data
@@ -288,16 +296,21 @@ li r31, 0 			#Original function
 
 PULSE
 {
-    lis r16, 0x8049
-	ori r16, r16, 0x5D38
-	stw r15, 0 (r16)
-	blr
+    lis r16, 0x8049         #\
+	ori r16, r16, 0x5D38    #|Store GCT Link Return Location
+	stw r15, 0 (r16)        #/
+
+    lis r16, 0x8049			#|Check if the file loaded
+    ori r16, r16, 0x5D40    #|
+    lwz r16, 0 (r16)		#|
+    lwz r6, 0 (r16)
+    cmpwi r6, 0
+    beq- Return             #|The allocation is set to be all zero. If its not, a GCT exists in there.
+
+    mr r15, r16
+    li r4, 0x8 
+Return:
+	blr                     #MultiGCT goes brrrrrrrrrr
 }
-* 20495600 00D0C0DE     #GCTLink Lives
-* 20495604 00D0C0DE
-* 04001848 80495608
-* 64000000 00000000
-
-
 .RESET
 
