@@ -13,6 +13,10 @@ Stagelist Looter Data  [Desi]
 	.BA->$8053CFF8	
 	.BA<-FileNameLocation4
 	.BA->$8053EFB4
+	.BA<-FileNameLocation5
+	.BA->$80495D44
+	.BA<-FileNameLocation6
+	.BA->$80495D48
     .BA<-TABLE_STAGES
     .BA->$80495D00
     .BA<-TABLE_1
@@ -30,16 +34,21 @@ Stagelist Looter Data  [Desi]
 
 ModFolderName:
 	string "/Project+/"
-FileNameFolder:
-	string "/stage/"
+FileNameFolder:		#Requires SD Root Path for anything outside of the base builds SD Root. Must match ModFolderName.
+	string "/Project+/pf/stage/"
 FileNameLocation:
 	string "stageslot/"
 FileNameLocation2:
 	string "stageinfo/"	
-FileNameLocation3:
+FileNameLocation3:  #Requires SD Root Path for anything outside of the base builds SD Root. Must match ModFolderName.
 	string "/sound/tracklist/"
 FileNameLocation4:
 	string "pf/sound/"
+FileNameLocation5:	#Requires SD Root Path for anything outside of the base builds SD Root. Must match ModFolderName.
+	string "/STAGE/MELEE/STG"
+FileNameLocation6:	#Requires SD Root Path for anything outside of the base builds SD Root. The SD Root Must match ModFolderName.
+	string "DVD:/module/"
+
 
 TABLE_1:
 	byte[21] |

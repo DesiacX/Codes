@@ -38,18 +38,11 @@ CODE @ $805A7E00
 	stwu r1, -0x180(r1)
 	stw r4, 0x8(r1)
 
-  lis r4, 0x8049    #Modification for Stagelist Related files to load File Path from Stagelist.asm
-  ori r4, r4, 0x5D3C
-  lwz r3, 0 (r4)
-  cmpwi r3, 0x1
-  blt- OriginalModFolder
-  nop #A hookpoint below
-  b ModFolderSkip
-OriginalModFolder:
+  nop #Go to the end of the code, ima hook here.
+  beq- finish #See Hook below. cmpw r3, 1. r3 is set to 1 if an SD Root exists in the file path already.
+
 	lis r4, 0x8040		#\ Mod folder
 	ori r4, r4, 0x6920	#/
-
-ModFolderSkip:
 	addi r3, r1, 0x10
 	lis r12, 0x803F 
 	ori r12, r12, 0xA340
@@ -63,6 +56,8 @@ ModFolderSkip:
 	bctrl
 	li r5, 0x68
 	addi r4, r1, 0x10
+
+LoadFileSD:
 	addi r3, r1, 0x188	# original 0x8(r1) with the 0x180 offset
 	stw r4, 0x188(r1)	# Force a string redirect
 	stwu r1, -0x80(r1)
@@ -96,13 +91,62 @@ finish:
 	bctr
 }
 
-
-
-HOOK @ $805A7E24
+HOOK @ $805A7E10
 {
-  li r3, 0  #Hookpoint after checking for Stagelist Modification
-  stw r3, 0 (r4)
-  lwz r4, -0x8 (r4)
+pfcheck:
+  lhz r3, 0xA (r4)  #Check for pf after SD root. If it has pf, it may already have the SD root setup.
+  li r12, 0x7066
+  cmpw r3, r12
+  bne- end
+stagelistcheck:     #This checks the Stagelist Root and SD root
+  lis r3, 0x8049
+  lwz r3, 0x5D34 (r3)
+  lwz r3, 0 (r3)
+  lwz r12, 0 (r4)
+  cmpw r3, r12
+  beq- RootExists
+	lis r3, 0x8040
+	lwz r3, 0x6920 (r3)
+  cmpw r3, r12
+  bne- end
+RootExists:
+  li r5, 0x68
+  stw r4, 0x8(r1)
+	addi r3, r1, 0x188	# original 0x8(r1) with the 0x180 offset
+	stw r4, 0x188(r1)	# Force a string redirect
+	stwu r1, -0x80(r1)
+	stmw r2, 0x8(r1)
+	lis r12, 0x8001				# \
+	ori r12, r12, 0xCBF4		# | Read from SD
+	mtctr r12					# |
+	bctrl						# |
+	mr r28, r3					# /
+	cmpwi r3, 0
+	bne LoadFromDVD
+	addi r1, r1, 0x80
+  li r12, 1
+	b end	
+LoadFromDVD:
+  lmw r2, 0x8(r1)
+	addi r1, r1, 0x80
+	lwz r4, 0x8(r1)			# Get filename
+	addi r3, r1, 0x1A0		# \ Revert parameter pointer to original string (0x20(r1))
+	stw r3, 0x188(r1)		# /
+	addi r3, r1, 0x188		# Original 0x8(r1) + 0x180 added
+
+  lwz r12, 0 (r3)       #When loading from a full path, there is no original.
+  addi r12, r12, 0xC    #To compensate, we recreate the original. Also i hate having all these lines.
+  stw r12, 0 (r3)
+
+	lis r12, 0x8001			# \
+	ori r12, r12, 0xC144	# | Read from DVD
+	mtctr r12				# |
+	bctrl					# |
+	mr r28, r3				# /
+  li r12, 1
+
+end:
+  cmpwi r12, 1
 }
 
 
@@ -328,11 +372,24 @@ HOOK @ $801C8370
   cmpwi r26, 0x77		# |Stage soundbanks are range 0x53-0x77	(really 0x4C-70)
   bgt+ NormalBank		#/
   
+
+
+  lis r3, 0x8049    #\Load from Stagelist.
+  lwz r3, 0x5D34 (r3)
+  lwz r4, 1 (r3)
+  stw r4, 0x25 (r1)
+  lwz r4, 5 (r3)
+  stw r4, 0x29 (r1)
+
   mr r4, r5				#
   lis r5, 0x5F00		# \ Concatenate "_"
   stw r5, 0x20(r1)		# /
+
+
   addi r4, r1, 0x20		#
   addi r3, r1, 0x24		# place the string character in r1+0x24
+
+
   lis r12, 0x803F		#
   ori r12, r12, 0xA384	# strcat
   mtctr r12				#

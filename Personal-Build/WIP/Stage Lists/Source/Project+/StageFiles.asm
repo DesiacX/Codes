@@ -3,16 +3,6 @@ Stage File System Neo [DukeItOut]
 #################################
 	.BA<-FileFormatSetup
 	.BA->$8053EFE0
-	.BA<-FileNameFolder
-	.BA->$8053EFE4
-	.BA<-FileNameLocation
-	.BA->$8053EFE8
-	.BA<-FileNameLocation2
-	.BA->$8053EFEC	
-	.BA<-FileNameLocation3
-	.BA->$8053CFF8	
-	.BA<-FileNameLocation4
-	.BA->$8053EFB4
 	.BA<-FileNameFormat
 	.BA->$8053EFF0
 	.BA<-FileNameFormat2
@@ -23,18 +13,9 @@ Stage File System Neo [DukeItOut]
 	.BA->$8053EFB0
 	.RESET
 	.GOTO->FileLoadCode
+
 FileFormatSetup:
 	string "%s%s%02X%s"
-FileNameFolder:
-	string "/stage/"
-FileNameLocation:
-	string "stageslot/"
-FileNameLocation2:
-	string "stageinfo/"	
-FileNameLocation3:
-	string "/sound/tracklist/"
-FileNameLocation4:
-	string "pf/sound/"
 FileNameFormat:
  	string ".asl"
 FileNameFormat2:
@@ -170,13 +151,24 @@ clear:
 	stb r12, 0x14F(r26)		# Set the overlay toggle (boolean, normally 0)
 }	
 ###
+
+#Edited to load from individual stage files.
+
 # Load Secondary Stage Name on Slots 0x13 and 0x19
 op NOP @ $8094AB24			# Make all dual pac stages run the same code
 HOOK @ $8094AB2C
 {
-	lis r4, 0x80B2			# \ Load "/STAGE/MELEE/STG"
-	ori r4, r4, 0xC320		# /
+	lis r4, 0x8049			# \ Load from Stagelist GCT
+	lwz r4, 0x5D44 (r4)		# /
 }
+
+# Load Secondary Stage Name on everything else
+HOOK @ $80949C14
+{
+	lis r4, 0x8049			# \ Load from Stagelist GCT
+	lwz r4, 0x5D44 (r4)		# /
+}
+
 HOOK @ $8094AB44
 {
 	lis r4, 0x8053			# \ Offset of stagenames
@@ -187,6 +179,8 @@ HOOK @ $8094AB44
 	add r4, r4, r12
 	add r4, r4, r5
 }	
+
+
 ###
 # Code at 806BE22C determines if the stage dual loads
 # TODO: Can't create yet because of stage ID conflict with SSE. Will wait until after release to attempt to make possible
@@ -296,6 +290,29 @@ HOOK @ $80043B28
 	add r3, r3, r12		# /
 	blr					# Return, pointer achieved
 }
+
+#Force Stage Modules to load Module Strings from individual Stagelist Configurations
+HOOK @ $80026FE0
+{
+
+
+	lhz r5, 0 (r28)
+	li r7, 0x6674		#ft
+	cmpw r5, r7
+	beq default
+	lwz r5, 0 (r28)
+	lis r7, 0x736f 		#sora
+	ori r7, r7, 0x7261
+	beq default
+	lis r4, 0x8049
+	lwz r4, 0x5D48 (r4)
+	b %end%
+default:
+	lis r4 0x8042		#Default Module path
+	ori r4, r4, 0x2d00
+	
+}
+
 # Force stage pacs to load 
 HOOK @ $80949C20
 {
@@ -491,12 +508,6 @@ CODE @ $8053E000
 	mtctr r12				# |
 	bctrl 					# /
 	addi r3, r1, 0x60
-
-	lis r18, 0x8049			#\Decalre to File Patch to use SD Root contained within Stagelist.asm
-	ori r18, r18, 0x5D3C	#|
-	li r19, 0x1				#|
-	stw r19, 0 (r18)		#/
-
 	li r18, 0
 	li r19, 0
 	lis r12, 0x8001			# \
@@ -583,12 +594,6 @@ not_found:
 	mtctr r12				# |
 	bctrl 					# /
 	addi r3, r1, 0x60
-
-	lis r18, 0x8049			#\Decalre to File Patch to use SD Root contained within Stagelist.asm
-	ori r18, r18, 0x5D3C	#|
-	li r19, 0x1				#|
-	stw r19, 0 (r18)		#/
-
 	li r18, 0
 	li r19, 0
 	lis r12, 0x8001			# \
@@ -641,13 +646,6 @@ TracklistLoading:
 	stw r3, 4 (r12)
 	lhz r3, 8 (r6)
 	sth r3, 8 (r12)
-
-
-	lis r6, 0x8049			#\Decalre to File Patch to use SD Root contained within Stagelist.asm
-	ori r6, r6, 0x5D3C		#|
-	li r12, 0x1				#|
-	stw r12, 0 (r6)			#/
-	
 	addi r3, r1, 0x30
 	li r6,0					# Necessary to prevent a max filesize override by the File Patch Code!
 	lis r12, 0x8001			# \

@@ -13,6 +13,10 @@ Stagelist Looter Data  [Desi]
 	.BA->$8053CFF8	
 	.BA<-FileNameLocation4
 	.BA->$8053EFB4
+	.BA<-FileNameLocation5
+	.BA->$80495D44
+	.BA<-FileNameLocation6
+	.BA->$80495D48
     .BA<-TABLE_STAGES
     .BA->$80495D00
     .BA<-TABLE_1
@@ -25,22 +29,26 @@ Stagelist Looter Data  [Desi]
     .BA->$80495D10
     .BA<-TABLE_5
     .BA->$80495D14
-
     .RESET
     .GOTO->SkipData
 
 ModFolderName:
 	string "/PrjctMP+/"
 FileNameFolder:
-	string "/stage/"
+	string "/PrjctMP+/pf/stage/"
 FileNameLocation:
 	string "stageslot/"
 FileNameLocation2:
 	string "stageinfo/"	
 FileNameLocation3:
-	string "/sound/tracklist/"
+	string "/PrjctMP+/pf/sound/tracklist/"
 FileNameLocation4:
 	string "pf/sound/"
+FileNameLocation5:	#Requires SD Root Path for anything outside of the base builds SD Root. Must match ModFolderName.
+	string "/PrjctMP+/pf/STAGE/MELEE/STG"
+FileNameLocation6:	#Requires SD Root Path for anything outside of the base builds SD Root. The SD Root Must match ModFolderName.
+	string "DVD:/PrjctMP+/pf/module/"
+
 	
 TABLE_1:
 	byte[10] |

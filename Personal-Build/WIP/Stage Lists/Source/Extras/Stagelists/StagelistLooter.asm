@@ -9,7 +9,7 @@ Stagelist Looter [Desi]
 #935CE460 - Stagelist GCT and Selmap.pac File Map Location
 #80495D34 - Location of SD Root inside file loaded GCT 
 #80495D38 - GCT Link Return Location
-#80495D3C - File Patch Flag (Set by StageFiles.ASM, turned off by FilePatchCode.asm)
+#80495D3C - No longer used
 #80495D40 - Location of Loaded GCT
 
 
@@ -138,161 +138,193 @@ poststorage:
     blr
 }
 
-ResultsScreen:
-#This overwrites the loaded files directory with the SD Root when you go to the VS Results Screen.
-#This is to prevent the game from loading a results screen with incompatible stocks.
-#The game re-loads the default SSS config upon entering the CSS, which will clear this edit.
-HOOK @ $806D6724
-{
-    lis r3, 0x8049
-    lwz r3, 0x5D34 (r3) #Load Stagelist Root
-    lis r4, 0x8040
-    ori r4, r4, 0x6920  #Load SD Root
-    lwz r6, 0 (r4)
-	stw r6, 0 (r3)
-	lwz r6, 4 (r4)
-	stw r6, 4 (r3)
-	lhz r6, 8 (r4)
-	sth r6, 8 (r3)
-    lis r3, 0x805A  #Original Operation
 
-}
-
+#On the SSS, this will load based off of the code menu.
+#On boot, CSS Load, and Results Screen load, it will load the default SSS. This prevents this from going anywhere beyond the SSS.
 SSS:
 HOOK @ $806C8D88       #Fileload on SSS Load
 {
-stw r0, -4(r1)         #\Stack Frame 
-mflr r0                #|
-stw r0, 4(r1)          #|
-mfctr r0               #|
-stw r0, -8(r1)         #|
-stwu r1, -132(r1)      #|
-stmw r3, 8(r1)         #/
+    stw r0, -4(r1)         #\Stack Frame 
+    mflr r0                #|
+    stw r0, 4(r1)          #|
+    mfctr r0               #|
+    stw r0, -8(r1)         #|
+    stwu r1, -132(r1)      #|
+    stmw r3, 8(r1)         #/
 
-lis r31, 0x935C			#\Setup File Loader at 935CE480
-ori r31, r31, 0xE460
-lwz r3, 0 (r31)
-lis r30, CodeMenuStart
-lwz r30, CodeMenuHeader (r30)
-lbz r30, 0xB (r30)        #OBtain Codemenu Offset
-mulli r30, r30, 0x4
-lwzx r30, r3, r30       #Obtain Stagelist File based on
-stw r30, 0 (r31)
 
-lis r30, 0x8049			#|Load storage allocation within GCT
-ori r30, r30, 0x5D40     #|
-lwz r30, 0 (r30)		#|
-stw r30, 12(r31)		#/
+retry:
+    lis r31, 0x935C			#\Setup File Loader at 935CE480
+    ori r31, r31, 0xE460
+    lwz r3, 0 (r31)
+    lis r30, CodeMenuStart
+    lwz r30, CodeMenuHeader (r30)
+    lbz r30, 0xB (r30)        #OBtain Codemenu Offset
+    mulli r30, r30, 0x4
+    lwzx r30, r3, r30       #Obtain Stagelist File based on
+    stw r30, 0 (r31)
 
-li r30, 0x0				#\Initialize Data
-stw r30, 4(r31)			#|
-stw r30, 8(r31)			#|
-stw r30, 16(r31)		#/
+    lis r30, 0x8049			#|Load storage allocation within GCT
+    ori r30, r30, 0x5D40    #|
+    lwz r30, 0 (r30)		#|
+    stw r30, 12(r31)		#/
 
-mr r3, r31				#\Load File
-lis r0, 0x8001			#|
-ori r0, r0, 0xCBF4		#|
-mtctr r0				#|
-bctrl 					#/
+    li r30, 0x0				#\Initialize Data
+    stw r30, 4(r31)			#|
+    stw r30, 8(r31)			#|
+    stw r30, 16(r31)		#/
 
-lmw r3, 8(r1)			#\Return Stack Frame
-addi r1, r1, 0x84		#|
-lwz r0, -8(r1)			#|
-mtctr r0				#|
-lwz r0, 4(r1)			#|
-mtlr r0					#|
-lwz r0, -4(r1)			#/
+    mr r3, r31				#\Load File
+    lis r0, 0x8001			#|
+    ori r0, r0, 0xCBF4		#|
+    mtctr r0				#|
+    bctrl 					#/
 
-mr r31, r3 				#Original function
+    cmpwi r3, 1
+    beq- retry
+
+    lmw r3, 8(r1)			#\Return Stack Frame
+    addi r1, r1, 0x84		#|
+    lwz r0, -8(r1)			#|
+    mtctr r0				#|
+    lwz r0, 4(r1)			#|
+    mtlr r0					#|
+    lwz r0, -4(r1)			#/
+
+    mr r31, r3 				#Original function
 }
+
+ResultsScreen:
+HOOK @ $806D6724
+{
+    stw r0, -4(r1)         #\Stack Frame 
+    mflr r0                #|
+    stw r0, 4(r1)          #|
+    mfctr r0               #|
+    stw r0, -8(r1)         #|
+    stwu r1, -132(r1)      #|
+    stmw r3, 8(r1)         #/
+
+    lis r31, 0x935C			#\Setup File Loader at 935CE480
+    ori r31, r31, 0xE460
+    lwz r30, 0 (r31)
+    lwz r30, 0 (r30)        #|Obtain Default STagelist name.
+    stw r30, 0 (r31)
+
+    lis r30, 0x8049			#\Load storage allocation within GCT
+    ori r30, r30, 0x5D40    #|
+    lwz r30, 0 (r30)		#|
+    stw r30, 12(r31)		#/
+
+    li r30, 0x0				#\Initialize Data
+    stw r30, 4(r31)			#|
+    stw r30, 8(r31)			#|
+    stw r30, 16(r31)		#/
+
+    mr r3, r31				#\Load File
+    lis r0, 0x8001			#|
+    ori r0, r0, 0xCBF4		#|
+    mtctr r0				#|
+    bctrl 					#/
+
+    lmw r3, 8(r1)			#\Return Stack Frame
+    addi r1, r1, 0x84		#|
+    lwz r0, -8(r1)			#|
+    mtctr r0				#|
+    lwz r0, 4(r1)			#|
+    mtlr r0					#|
+    lwz r0, -4(r1)			#/
+    lis r3, 0x805A          #Original Operation
+}
+
+
 
 CSS:
 HOOK @ $806828CC        #Fileload on CSS Load
 {
-stw r0, -4(r1)         #\Stack Frame 
-mflr r0                #|
-stw r0, 4(r1)          #|
-mfctr r0               #|
-stw r0, -8(r1)         #|
-stwu r1, -132(r1)      #|
-stmw r3, 8(r1)         #/
+    stw r0, -4(r1)         #\Stack Frame 
+    mflr r0                #|
+    stw r0, 4(r1)          #|
+    mfctr r0               #|
+    stw r0, -8(r1)         #|
+    stwu r1, -132(r1)      #|
+    stmw r3, 8(r1)         #/
 
-lis r31, 0x935C			#\Setup File Loader at 935CE480
-ori r31, r31, 0xE460
-lwz r30, 0 (r31)
-lwz r30, 0 (r30)        #|Obtain Default STagelist name.
-stw r30, 0 (r31)
+    lis r31, 0x935C			#\Setup File Loader at 935CE480
+    ori r31, r31, 0xE460
+    lwz r30, 0 (r31)
+    lwz r30, 0 (r30)        #|Obtain Default STagelist name.
+    stw r30, 0 (r31)
 
-lis r30, 0x8049			#|Load storage allocation within GCT
-ori r30, r30, 0x5D40     #|
-lwz r30, 0 (r30)		#|
-stw r30, 12(r31)		#/
+    lis r30, 0x8049			#\Load storage allocation within GCT
+    ori r30, r30, 0x5D40    #|
+    lwz r30, 0 (r30)		#|
+    stw r30, 12(r31)		#/
 
-li r30, 0x0				#\Initialize Data
-stw r30, 4(r31)			#|
-stw r30, 8(r31)			#|
-stw r30, 16(r31)		#/
+    li r30, 0x0				#\Initialize Data
+    stw r30, 4(r31)			#|
+    stw r30, 8(r31)			#|
+    stw r30, 16(r31)		#/
 
-mr r3, r31				#\Load File
-lis r0, 0x8001			#|
-ori r0, r0, 0xCBF4		#|
-mtctr r0				#|
-bctrl 					#/
+    mr r3, r31				#\Load File
+    lis r0, 0x8001			#|
+    ori r0, r0, 0xCBF4		#|
+    mtctr r0				#|
+    bctrl 					#/
 
-lmw r3, 8(r1)			#\Return Stack Frame
-addi r1, r1, 0x84		#|
-lwz r0, -8(r1)			#|
-mtctr r0				#|
-lwz r0, 4(r1)			#|
-mtlr r0					#|
-lwz r0, -4(r1)			#/
+    lmw r3, 8(r1)			#\Return Stack Frame
+    addi r1, r1, 0x84		#|
+    lwz r0, -8(r1)			#|
+    mtctr r0				#|
+    lwz r0, 4(r1)			#|
+    mtlr r0					#|
+    lwz r0, -4(r1)			#/
 
-li r4, 0x2A 			#Original function
+    li r4, 0x2A 			#Original function
 }
 
 Boot:
 HOOK @ $8002d528       #Fileload on Boot
 {
-stw r0, -4(r1)         #\Stack Frame 
-mflr r0                #|
-stw r0, 4(r1)          #|
-mfctr r0               #|
-stw r0, -8(r1)         #|
-stwu r1, -132(r1)      #|
-stmw r3, 8(r1)         #/
+    stw r0, -4(r1)         #\Stack Frame 
+    mflr r0                #|
+    stw r0, 4(r1)          #|
+    mfctr r0               #|
+    stw r0, -8(r1)         #|
+    stwu r1, -132(r1)      #|
+    stmw r3, 8(r1)         #/
 
-lis r31, 0x935C			#\Setup File Loader at 935CE480
-ori r31, r31, 0xE460
-lwz r30, 0 (r31)
-lwz r30, 0 (r30)        #|Obtain Default STagelist name.
-stw r30, 0 (r31)
-lis r30, 0x8049			#|Load storage allocation within GCT
-ori r30, r30, 0x5D40    #|
-lwz r30, 0 (r30)		#|
-stw r30, 12(r31)		#/
+    lis r31, 0x935C			#\Setup File Loader at 935CE480
+    ori r31, r31, 0xE460
+    lwz r30, 0 (r31)
+    lwz r30, 0 (r30)        #|Obtain Default STagelist name.
+    stw r30, 0 (r31)
+    lis r30, 0x8049			#\Load storage allocation within GCT
+    ori r30, r30, 0x5D40    #|
+    lwz r30, 0 (r30)		#|
+    stw r30, 12(r31)		#/
 
-li r30, 0x0				#\Initialize Data
-stw r30, 4(r31)			#|
-stw r30, 8(r31)			#|
-stw r30, 16(r31)		#/
+    li r30, 0x0				#\Initialize Data
+    stw r30, 4(r31)			#|
+    stw r30, 8(r31)			#|
+    stw r30, 16(r31)		#/
 
-mr r3, r31				#\Load File
-lis r0, 0x8001			#|
-ori r0, r0, 0xCBF4		#|
-mtctr r0				#|
-bctrl 					#/
+    mr r3, r31				#\Load File
+    lis r0, 0x8001			#|
+    ori r0, r0, 0xCBF4		#|
+    mtctr r0				#|
+    bctrl 					#/
 
-lmw r3, 8(r1)			#\Return Stack Frame
-addi r1, r1, 0x84		#|
-lwz r0, -8(r1)			#|
-mtctr r0				#|
-lwz r0, 4(r1)			#|
-mtlr r0					#|
-lwz r0, -4(r1)			#/
+    lmw r3, 8(r1)			#\Return Stack Frame
+    addi r1, r1, 0x84		#|
+    lwz r0, -8(r1)			#|
+    mtctr r0				#|
+    lwz r0, 4(r1)			#|
+    mtlr r0					#|
+    lwz r0, -4(r1)			#/
 
-li r31, 0 			#Original function
+    li r31, 0 			#Original function
 }
-
 
 PULSE
 {
