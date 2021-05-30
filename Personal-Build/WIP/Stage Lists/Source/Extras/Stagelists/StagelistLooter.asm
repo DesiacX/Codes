@@ -14,7 +14,7 @@ Stagelist Looter [Desi]
 
 
     .BA<-StagelistCodesetStorage
-    .BA->$935CE460
+    .BA->$935CE45C
 PULSE
 {
     mr r16, r6  #Copy Base Address to Pointer Address
@@ -41,21 +41,21 @@ StagelistCodesetStorage:
     word[8] |
     0, 0, 0, 0, 0, 0, 0, 0
 Stagelist1:
-    string "Project+/Source/Extras/Stagelists/Project+Stagelist.gct"
+    string "/stage/stagelist/Project+Stagelist.gct"
 Stagelist2:
-    string "Project+/Source/Extras/Stagelists/LegacyMPStagelist.GCT"
+    string "/stage/stagelist/LegacyMPStagelist.GCT"
 Stagelist3:
-    string "Project+/Source/Extras/Stagelists/Project+Stagelist.gct"
+    string "/stage/stagelist/Project+Stagelist.gct"
 Stagelist4:
-    string "Project+/Source/Extras/Stagelists/Project+Stagelist.gct"
+    string "/stage/stagelist/Project+Stagelist.gct"
 Stagelist5:
-    string "Project+/Source/Extras/Stagelists/Project+Stagelist.gct"
+    string "/stage/stagelist/Project+Stagelist.gct"
 Stagelist6:
-    string "Project+/Source/Extras/Stagelists/Project+Stagelist.gct"
+    string "/stage/stagelist/Project+Stagelist.gct"
 Stagelist7:
-    string "Project+/Source/Extras/Stagelists/Project+Stagelist.gct"
+    string "/stage/stagelist/Project+Stagelist.gct"
 Stagelist8:
-    string "Project+/Source/Extras/Stagelists/Project+Stagelist.gct"
+    string "/stage/stagelist/Project+Stagelist.gct"
 
 
 SelmapStorage:
@@ -153,10 +153,10 @@ HOOK @ $806C8D88       #Fileload on SSS Load
     stmw r3, 8(r1)         #/
 
 
-retry:
+TryAgain:
     lis r31, 0x935C			#\Setup File Loader at 935CE480
     ori r31, r31, 0xE460
-    lwz r3, 0 (r31)
+    lwz r3, -4 (r31)
     lis r30, CodeMenuStart
     lwz r30, CodeMenuHeader (r30)
     lbz r30, 0xB (r30)        #OBtain Codemenu Offset
@@ -176,12 +176,17 @@ retry:
 
     mr r3, r31				#\Load File
     lis r0, 0x8001			#|
-    ori r0, r0, 0xCBF4		#|
+    ori r0, r0, 0xBF0C		#|
     mtctr r0				#|
     bctrl 					#/
 
-    cmpwi r3, 1
-    beq- retry
+    lis r31, 0x8049			#\Load storage allocation within GCT
+    lwz r31, 0x5D40 (r31)    #|
+    lwz r31, 0 (r31)
+    lis r30, 0x00D0
+    ori r30, r30, 0xC0DE
+    cmpw r30, r31
+    bne TryAgain
 
     lmw r3, 8(r1)			#\Return Stack Frame
     addi r1, r1, 0x84		#|
@@ -205,9 +210,10 @@ HOOK @ $806D6724
     stwu r1, -132(r1)      #|
     stmw r3, 8(r1)         #/
 
+TryAgain:
     lis r31, 0x935C			#\Setup File Loader at 935CE480
     ori r31, r31, 0xE460
-    lwz r30, 0 (r31)
+    lwz r30, -4 (r31)
     lwz r30, 0 (r30)        #|Obtain Default STagelist name.
     stw r30, 0 (r31)
 
@@ -223,9 +229,18 @@ HOOK @ $806D6724
 
     mr r3, r31				#\Load File
     lis r0, 0x8001			#|
-    ori r0, r0, 0xCBF4		#|
+    ori r0, r0, 0xBF0C		#|
     mtctr r0				#|
     bctrl 					#/
+
+    lis r31, 0x8049			#\Load storage allocation within GCT
+    lwz r31, 0x5D40 (r31)    #|
+    lwz r31, 0 (r31)
+    lis r30, 0x00D0
+    ori r30, r30, 0xC0DE
+    cmpw r30, r31
+    bne TryAgain
+
 
     lmw r3, 8(r1)			#\Return Stack Frame
     addi r1, r1, 0x84		#|
@@ -250,9 +265,10 @@ HOOK @ $806828CC        #Fileload on CSS Load
     stwu r1, -132(r1)      #|
     stmw r3, 8(r1)         #/
 
+TryAgain:
     lis r31, 0x935C			#\Setup File Loader at 935CE480
     ori r31, r31, 0xE460
-    lwz r30, 0 (r31)
+    lwz r30, -4 (r31)
     lwz r30, 0 (r30)        #|Obtain Default STagelist name.
     stw r30, 0 (r31)
 
@@ -268,9 +284,18 @@ HOOK @ $806828CC        #Fileload on CSS Load
 
     mr r3, r31				#\Load File
     lis r0, 0x8001			#|
-    ori r0, r0, 0xCBF4		#|
+    ori r0, r0, 0xBF0C		#|
     mtctr r0				#|
     bctrl 					#/
+
+    lis r31, 0x8049			#\Load storage allocation within GCT
+    lwz r31, 0x5D40 (r31)    #|
+    lwz r31, 0 (r31)
+    lis r30, 0x00D0
+    ori r30, r30, 0xC0DE
+    cmpw r30, r31
+    bne TryAgain
+
 
     lmw r3, 8(r1)			#\Return Stack Frame
     addi r1, r1, 0x84		#|
@@ -296,7 +321,7 @@ HOOK @ $8002d528       #Fileload on Boot
 
     lis r31, 0x935C			#\Setup File Loader at 935CE480
     ori r31, r31, 0xE460
-    lwz r30, 0 (r31)
+    lwz r30, -4 (r31)
     lwz r30, 0 (r30)        #|Obtain Default STagelist name.
     stw r30, 0 (r31)
     lis r30, 0x8049			#\Load storage allocation within GCT
@@ -311,7 +336,7 @@ HOOK @ $8002d528       #Fileload on Boot
 
     mr r3, r31				#\Load File
     lis r0, 0x8001			#|
-    ori r0, r0, 0xCBF4		#|
+    ori r0, r0, 0xBF0C		#|
     mtctr r0				#|
     bctrl 					#/
 
