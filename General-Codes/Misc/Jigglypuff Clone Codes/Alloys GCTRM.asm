@@ -1,5 +1,12 @@
 Jigglypuff Clone 6D Uses Bones 6/7/9 instead of 3/4/6 [codes]
 
+.Macro CloneBones(<CloneID>,<BoneID>,<WriteRegister>)
+{
+  cmpwi r3, <CloneID>
+  bne+ 0x8
+  li <WriteRegister>, <BoneID>
+}
+
 ################
 HOOK @ $80AC9F9C
 {
