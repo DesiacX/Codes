@@ -1,3 +1,0 @@
-Jigglypuff Clone 6D Uses Bones 6/7/9 instead of 3/4/6 [codes]
-Puff Clone 6D's Max Charge GFX is 0130000F [Codes]
-Puff Clone 6D Has Different Roll SFX [Codes]
